@@ -2,27 +2,50 @@ from datetime import datetime, timedelta
 import requests 
 import pandas as pd
 
+
 url = "https://api.pro.coinbase.com"
 symbol = "BTC-USD"
 size = "3600"
-time_end = datetime.now()
-delta = timedelta(hours=1)
-time_start = time_end - (300*delta)
+def candle_chunk(time_start, time_end):
+    
+    param = {
+        "start":time_start,
+        "end":time_end,
+        "granularity":size,
+    }
+    data = requests.get(f"{url}/products/{symbol}/candles", 
+                        params = param, 
+    )
+    df = pd.DataFrame(data.json(), columns= ["Time", "Low", "High", "Open", "Close", "Volume"])
 
-time_end = time_end.isoformat()
-time_start = time_start.isoformat()
+    return df
 
-param = {
-    "start":time_start,
-    "end":time_end,
-    "granularity":size,
-}
-data = requests.get(f"{url}/products/{symbol}/candles", 
-                    params = param, 
-)
+def all_candles(start): 
 
-df = pd.DataFrame(data.json(), columns= ["Time", "Low", "High", "Open", "Close", "Volume"])
+    time_end = datetime.now()
+    delta = timedelta(hours=1)
+    df = pd.DataFrame()
+    first_start = start
+    candles = 300
+    while time_end > first_start:
+        difference = time_end - first_start
+        hour_difference = difference.total_seconds() / 3600
+        print(hour_difference)
+        if(hour_difference) <= 300:
+            candles = hour_difference
 
-df["Date"] = pd.to_datetime(df["Time"], unit='s')
+        time_start = time_end - (candles*delta)
 
-df = df[["Date", "Open", "Low", "High", "Close", "Volume"]]
+        end = time_end.isoformat()
+        start = time_start.isoformat()
+        df = pd.concat([df,candle_chunk(start, end)])
+        time_end = time_end - candles*delta
+    to_csv(df)
+
+def to_csv(df):
+    df["Date"] = pd.to_datetime(df["Time"], unit='s')
+
+    df = df[["Date", "Open", "Low", "High", "Close", "Volume"]]
+    df.to_csv("Bitcoin_data.csv", index=False)
+
+all_candles(datetime(2021, 1, 1))
