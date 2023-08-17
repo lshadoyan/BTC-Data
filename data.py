@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-import requests 
+from tqdm import tqdm
 import pandas as pd
+import requests 
 
 
 url = "https://api.pro.coinbase.com"
@@ -27,10 +28,10 @@ def all_candles(start):
     df = pd.DataFrame()
     first_start = start
     candles = 300
+    bar = tqdm(total=int((time_end - first_start).total_seconds() / 3600))
     while time_end > first_start:
         difference = time_end - first_start
         hour_difference = difference.total_seconds() / 3600
-        print(hour_difference)
         if(hour_difference) <= 300:
             candles = hour_difference
 
@@ -40,6 +41,8 @@ def all_candles(start):
         start = time_start.isoformat()
         df = pd.concat([df,candle_chunk(start, end)])
         time_end = time_end - candles*delta
+        bar.update(int(candles))
+    bar.close()
     to_csv(df)
 
 def to_csv(df):

@@ -1,5 +1,5 @@
 # Use the official Ubuntu as the base image
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 # Install system dependencies
 RUN apt-get update && \
