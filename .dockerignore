@@ -1,2 +1,4 @@
 Bitcoin_data.csv 
 .gitignore
+__pycache__
+.git
